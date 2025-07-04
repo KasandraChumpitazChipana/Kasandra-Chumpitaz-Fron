@@ -1,0 +1,216 @@
+<!-- reniec.component.html -->
+<div class="reniec-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <i class="fas fa-building"></i>
+      Gestión de Registros RENIEC
+    </h1>
+    <p>Consulta y administra los registros de entidades empresariales</p>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="mensaje" *ngIf="mensaje" [ngClass]="'mensaje-' + tipoMensaje">
+    <i class="fas" [ngClass]="{
+      'fa-check-circle': tipoMensaje === 'success',
+      'fa-exclamation-triangle': tipoMensaje === 'error',
+      'fa-info-circle': tipoMensaje === 'info'
+    }"></i>
+    {{ mensaje }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    Cargando...
+  </div>
+
+  <!-- Búsqueda por RUC -->
+  <div class="search-section">
+    <div class="card">
+      <h3>
+        <i class="fas fa-search"></i>
+        Búsqueda por RUC
+      </h3>
+      <div class="search-form">
+        <input 
+          type="text" 
+          [(ngModel)]="rucBusqueda" 
+          placeholder="Ingrese el RUC a buscar"
+          class="input-field"
+          (keyup.enter)="buscarPorRuc()"
+        >
+        <button (click)="buscarPorRuc()" class="btn btn-primary" [disabled]="loading">
+          <i class="fas fa-search"></i>
+          Buscar
+        </button>
+        <button (click)="limpiarBusqueda()" class="btn btn-secondary" [disabled]="loading">
+          <i class="fas fa-times"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resultado de búsqueda individual -->
+  <div class="result-section" *ngIf="registroSeleccionado">
+    <div class="card">
+      <h3>
+        <i class="fas fa-info-circle"></i>
+        Resultado de Búsqueda
+      </h3>
+      <div class="registro-detalle">
+        <div class="registro-info">
+          <div class="info-row">
+            <span class="label">RUC:</span>
+            <span class="value">{{ registroSeleccionado.ruc }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Razón Social:</span>
+            <span class="value">{{ registroSeleccionado.razonSocial }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Condición:</span>
+            <span class="value">{{ registroSeleccionado.condicion }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Dirección:</span>
+            <span class="value">{{ registroSeleccionado.direccion }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Ubicación:</span>
+            <span class="value">{{ registroSeleccionado.distrito }}, {{ registroSeleccionado.provincia }}, {{ registroSeleccionado.departamento }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Estado:</span>
+            <span class="value badge" [ngClass]="estaActivo(registroSeleccionado) ? 'badge-success' : 'badge-danger'">
+              {{ estaActivo(registroSeleccionado) ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+        <div class="registro-actions">
+          <button 
+            *ngIf="estaActivo(registroSeleccionado)"
+            (click)="desactivarRegistro(registroSeleccionado.Id)" 
+            class="btn btn-danger"
+            [disabled]="loading"
+          >
+            <i class="fas fa-ban"></i>
+            Desactivar
+          </button>
+          <button 
+            *ngIf="!estaActivo(registroSeleccionado)"
+            (click)="restaurarRegistro(registroSeleccionado.Id)" 
+            class="btn btn-success"
+            [disabled]="loading"
+          >
+            <i class="fas fa-undo"></i>
+            Restaurar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado completo -->
+  <div class="list-section">
+    <div class="card">
+      <div class="card-header">
+        <h3>
+          <i class="fas fa-list"></i>
+          Listado de Registros
+        </h3>
+        <button (click)="cargarTodosLosRegistros()" class="btn btn-primary" [disabled]="loading">
+          <i class="fas fa-sync"></i>
+          Actualizar
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters">
+        <div class="filter-group">
+          <input 
+            type="text" 
+            [(ngModel)]="filtroTexto" 
+            (ngModelChange)="aplicarFiltros()"
+            placeholder="Filtrar por RUC, razón social o dirección"
+            class="input-field"
+          >
+          <select [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()" class="select-field">
+            <option value="todos">Todos los estados</option>
+            <option value="activo">Solo activos</option>
+            <option value="inactivo">Solo inactivos</option>
+          </select>
+          <button (click)="limpiarFiltros()" class="btn btn-secondary">
+            <i class="fas fa-times"></i>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla de registros -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>RUC</th>
+              <th>Razón Social</th>
+              <th>Condición</th>
+              <th>Ubicación</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let registro of registrosFiltrados; trackBy: trackByRuc">
+              <td>{{ registro.ruc }}</td>
+              <td>{{ registro.razonSocial }}</td>
+              <td>{{ registro.condicion }}</td>
+              <td>{{ registro.distrito }}, {{ registro.provincia }}</td>
+              <td>
+                <span class="badge" [ngClass]="estaActivo(registro) ? 'badge-success' : 'badge-danger'">
+                  {{ estaActivo(registro) ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button 
+                    *ngIf="estaActivo(registro)"
+                    (click)="desactivarRegistro(registro.Id)" 
+                    class="btn btn-sm btn-danger"
+                    [disabled]="loading"
+                    title="Desactivar"
+                  >
+                    <i class="fas fa-ban"></i>
+                  </button>
+                  <button 
+                    *ngIf="!estaActivo(registro)"
+                    (click)="restaurarRegistro(registro.Id)" 
+                    class="btn btn-sm btn-success"
+                    [disabled]="loading"
+                    title="Restaurar"
+                  >
+                    <i class="fas fa-undo"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Mensaje cuando no hay registros -->
+        <div class="no-data" *ngIf="registrosFiltrados.length === 0 && !loading">
+          <i class="fas fa-inbox"></i>
+          <p>No se encontraron registros</p>
+        </div>
+      </div>
+
+      <!-- Información del total -->
+      <div class="table-info">
+        <p>
+          Mostrando {{ registrosFiltrados.length }} de {{ registros.length }} registros
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
