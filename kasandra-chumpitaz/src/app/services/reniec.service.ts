@@ -5,17 +5,16 @@ import { DataReniec } from '../model/DataReniec';
 import { environment } from '../environments/enviroment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ReniecService {
-  
+
   private readonly baseUrl = `${environment.URL_IA}/api/reniec`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   /**
    * Obtiene todos los registros de RENIEC
-   * @returns Observable<DataReniec[]>
    */
   getAll(): Observable<DataReniec[]> {
     return this.http.get<DataReniec[]>(this.baseUrl);
@@ -23,8 +22,7 @@ export class ReniecService {
 
   /**
    * Busca y guarda datos por RUC
-   * @param ruc - Número de RUC a buscar
-   * @returns Observable<DataReniec>
+   * @param ruc Número de RUC a buscar
    */
   getByRuc(ruc: string): Observable<DataReniec> {
     return this.http.get<DataReniec>(`${this.baseUrl}/ruc/${ruc}`);
@@ -32,8 +30,7 @@ export class ReniecService {
 
   /**
    * Desactiva un registro por ID
-   * @param id - ID del registro a desactivar
-   * @returns Observable<DataReniec>
+   * @param id ID del registro a desactivar
    */
   desactivar(id: number): Observable<DataReniec> {
     return this.http.put<DataReniec>(`${this.baseUrl}/desactivar/${id}`, {});
@@ -41,8 +38,7 @@ export class ReniecService {
 
   /**
    * Restaura un registro por ID
-   * @param id - ID del registro a restaurar
-   * @returns Observable<DataReniec>
+   * @param id ID del registro a restaurar
    */
   restaurar(id: number): Observable<DataReniec> {
     return this.http.put<DataReniec>(`${this.baseUrl}/restaurar/${id}`, {});

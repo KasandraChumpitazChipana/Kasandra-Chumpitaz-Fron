@@ -7,5 +7,5 @@ export interface DataReniec {
   departamento: string;
   provincia: string;
   distrito: string;
-  estado?: string; // Opcional ya que no está en el DTO pero sí en el modelo
+  estado?: string;  // Opcional
 }
